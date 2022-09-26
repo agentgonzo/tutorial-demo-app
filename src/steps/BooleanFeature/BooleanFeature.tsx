@@ -1,29 +1,34 @@
-import { FlagLink } from "../../components/FlagLink";
-import { Step, StepActionLink, StepDescription, StepStrongText, StepSuccessText } from "../../components/step/Step";
-import { useFeatureFlags } from "../../lib/featureManagement/FeatureFlagsContext";
-import { StepComponent, StepComponentProps } from "../StepTypes";
-import { forwardRef, useEffect } from "react";
+import {FlagLink} from "../../components/FlagLink";
+import {Step, StepActionLink, StepDescription, StepStrongText, StepSuccessText} from "../../components/step/Step";
+import {StepComponent, StepComponentProps} from "../StepTypes";
+import {forwardRef, useEffect, useState} from "react";
+import {useFeatureFlags} from '../../lib/featureManagement/FeatureFlagsContext'
 
 export const BooleanFeature: StepComponent = forwardRef<HTMLDivElement, StepComponentProps>(({number, active, current, onSuccessChange}: StepComponentProps, ref) => {
 
-  const {featureFlags} = useFeatureFlags()
-  const flag = featureFlags.snakeGame.release
-  const success = `${flag.isEnabled()}` !== `${flag.defaultValue}`
+  const {client} = useFeatureFlags()
+  const [success, setSuccess] = useState(false)
 
-  useEffect(()=> {
+  useEffect(() => {
+    (async () => {
+      setSuccess(await client.getBooleanValue(('snakeGame.release'), false))
+    })()
+  })
+
+  useEffect(() => {
     onSuccessChange(success)
   }, [success]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Step number={number} title="Release the new game" active={active || current} ref={ref}>
       <StepDescription>
-        Your engineering team has just deployed the game. To release it, <StepStrongText>enable its targeting</StepStrongText> and <StepStrongText>set its value to 
+        Your engineering team has just deployed the game. To release it, <StepStrongText>enable its targeting</StepStrongText> and <StepStrongText>set its value to
         <span className="value-true"> true</span></StepStrongText>.
       </StepDescription>
       <StepDescription>
         <StepActionLink>
-          <FlagLink 
-            flag={flag} 
+          <FlagLink
+            flag={{name: 'release'}}
             text={(flagName) => <>Go to {flagName}</>}/>
         </StepActionLink>
       </StepDescription>
